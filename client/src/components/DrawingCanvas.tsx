@@ -73,11 +73,16 @@ const DrawingCanvas = forwardRef(({ tool, color, onDrawingChange }: DrawingCanva
       clientY = e.clientY;
     }
     
-    // Adjust for canvas position if needed
+    // Adjust for canvas position and scale
     const rect = canvasRef.current?.getBoundingClientRect();
     if (rect) {
-      lastX.current = clientX - rect.left;
-      lastY.current = clientY - rect.top;
+      // Get the scale factor (in case canvas is styled with CSS)
+      const scaleX = canvasRef.current!.width / rect.width;
+      const scaleY = canvasRef.current!.height / rect.height;
+      
+      // Calculate the correct position
+      lastX.current = (clientX - rect.left) * scaleX;
+      lastY.current = (clientY - rect.top) * scaleY;
     }
   };
   
@@ -99,11 +104,16 @@ const DrawingCanvas = forwardRef(({ tool, color, onDrawingChange }: DrawingCanva
       clientY = e.clientY;
     }
     
-    // Adjust for canvas position
+    // Adjust for canvas position and scale
     const rect = canvasRef.current?.getBoundingClientRect();
     if (rect) {
-      const x = clientX - rect.left;
-      const y = clientY - rect.top;
+      // Get the scale factor (in case canvas is styled with CSS)
+      const scaleX = canvasRef.current!.width / rect.width;
+      const scaleY = canvasRef.current!.height / rect.height;
+      
+      // Calculate the correct position
+      const x = (clientX - rect.left) * scaleX;
+      const y = (clientY - rect.top) * scaleY;
       
       const ctx = contextRef.current;
       ctx.beginPath();

@@ -67,8 +67,73 @@ export default function HistoryScreen({ sessions, onBackToHome }: HistoryScreenP
               </div>
               <div className="p-3">
                 <div className="flex justify-between items-center mb-1">
-                  <div className="text-sm text-muted-foreground">
-                    {formatDate(session.createdAt)}
+                  <div className="flex items-center">
+                    <div className="text-sm text-muted-foreground">
+                      {formatDate(session.createdAt)}
+                    </div>
+                    <button 
+                      className="ml-2 p-1 hover:bg-gray-100 rounded-full transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Create the share modal for this session
+                        const shareModal = document.createElement('div');
+                        shareModal.innerHTML = `
+                          <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                            <div class="bg-white rounded-lg p-6 max-w-lg w-full max-h-[90vh] overflow-auto">
+                              <div class="flex flex-col space-y-4">
+                                <h3 class="text-xl font-semibold">Share Session</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div>
+                                    <p class="text-sm font-medium mb-1">Your Drawing</p>
+                                    <img src="${session.drawing}" alt="Your drawing" class="w-full h-auto border rounded" />
+                                  </div>
+                                  <div>
+                                    <p class="text-sm font-medium mb-1">Target Image</p>
+                                    <img src="${session.thumbnailImage}" alt="Target" class="w-full h-auto border rounded" />
+                                  </div>
+                                </div>
+                                <div class="flex space-x-2 justify-end">
+                                  <button class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300" id="closeShareModal">
+                                    Close
+                                  </button>
+                                  <button class="px-4 py-2 bg-primary text-white rounded hover:bg-opacity-90" id="downloadShareImages">
+                                    Download Images
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        `;
+                        document.body.appendChild(shareModal);
+                        
+                        // Add event listeners
+                        document.getElementById('closeShareModal')?.addEventListener('click', () => {
+                          document.body.removeChild(shareModal);
+                        });
+                        
+                        document.getElementById('downloadShareImages')?.addEventListener('click', () => {
+                          // Download the drawing and target image
+                          const drawingLink = document.createElement('a');
+                          drawingLink.href = session.drawing;
+                          drawingLink.download = `drawing-${session.id}.png`;
+                          drawingLink.click();
+                          
+                          // Download target image
+                          setTimeout(() => {
+                            const targetLink = document.createElement('a');
+                            targetLink.href = session.thumbnailImage;
+                            targetLink.download = `target-${session.id}.jpg`;
+                            targetLink.click();
+                          }, 100);
+                        });
+                      }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
+                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                        <polyline points="16 6 12 2 8 6"></polyline>
+                        <line x1="12" y1="2" x2="12" y2="15"></line>
+                      </svg>
+                    </button>
                   </div>
                   <div className={`px-3 py-1 rounded-full text-xs ${getBadgeColor(session.rating)}`}>
                     {session.rating.charAt(0).toUpperCase() + session.rating.slice(1)}

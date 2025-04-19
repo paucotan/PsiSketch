@@ -103,7 +103,7 @@ export default function DrawingScreen({
             activeToolId === "eraser-tool" ? "bg-muted" : ""
           }`}
         >
-          <span className="material-icons text-muted-foreground">ink_eraser</span>
+          <span className="material-icons text-muted-foreground">backspace</span>
         </button>
         <div className="flex justify-center items-center space-x-2">
           <input

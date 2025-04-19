@@ -185,13 +185,15 @@ export class MemStorage implements IStorage {
   }
 
   async getSessions(): Promise<Session[]> {
-    return Array.from(this.sessions.values()).sort((a, b) => {
+    const sessionsArray: Session[] = Array.from(this.sessions.values());
+    return sessionsArray.sort((a, b) => {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
   }
   
   async getSessionsByCategory(category: string): Promise<Session[]> {
-    return Array.from(this.sessions.values())
+    const sessionsArray: Session[] = Array.from(this.sessions.values());
+    return sessionsArray
       .filter(session => session.category === category)
       .sort((a, b) => {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -207,17 +209,13 @@ export class MemStorage implements IStorage {
     const id = this.currentSessionId++;
     const now = new Date();
     
-    // Ensure required fields are set
-    const sessionWithDefaults: InsertSession = {
-      ...insertSession,
-      notes: insertSession.notes || null,
-      category: insertSession.category || null,
-    };
-    
+    // Ensure required fields are set with proper defaults
     const session: Session = { 
-      ...sessionWithDefaults, 
+      ...insertSession,
       id, 
-      createdAt: now 
+      createdAt: now,
+      notes: insertSession.notes ?? null,
+      category: insertSession.category ?? null
     };
     
     this.sessions.set(id, session);
