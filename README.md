@@ -1,6 +1,6 @@
 # PsiSketch
 
-![PsiSketch Logo](client/src/assets/logo.png)
+![PsiSketch Logo](attached_assets/psisketch.png)
 
 A mobile-first remote viewing practice application that helps users explore their intuitive perception abilities through a guided drawing experience.
 
@@ -29,7 +29,7 @@ The application keeps track of your practice sessions, allowing you to review pa
 
 ## 🖼️ Screenshots
 
-![PsiSketch App](screenshots/app-screenshot.png)
+![PsiSketch screenshot](attached_assets/screenshots.png)
 
 ## 🚀 Technologies Used
 
