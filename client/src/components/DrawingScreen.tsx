@@ -16,13 +16,18 @@ export default function DrawingScreen({
 }: DrawingScreenProps) {
   const [activeToolId, setActiveToolId] = useState("pen-tool");
   const [color, setColor] = useState("#FFFFFF");
-  const [guidanceTip, setGuidanceTip] = useState<string>(getRandomTip("drawing"));
+  const [guidanceTip, setGuidanceTip] = useState<string>("");
   const canvasRef = useRef<{ 
     getImageData: () => string;
     setTool: (tool: string) => void;
     clearCanvas: () => void; 
   }>(null);
   const { toast } = useToast();
+  
+  // Set the guidance tip in useEffect to avoid state updates during render
+  useEffect(() => {
+    setGuidanceTip(getRandomTip("drawing"));
+  }, []);
   
   const handleToolChange = (toolId: string) => {
     setActiveToolId(toolId);

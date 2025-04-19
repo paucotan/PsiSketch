@@ -14,7 +14,12 @@ export default function BreathingScreen({
   duration = 30 
 }: BreathingScreenProps) {
   const [seconds, setSeconds] = useState(duration);
-  const [guidanceTip, setGuidanceTip] = useState<string>(getRandomTip("breathing"));
+  const [guidanceTip, setGuidanceTip] = useState<string>("");
+
+  // Set the guidance tip in useEffect to avoid state updates during render
+  useEffect(() => {
+    setGuidanceTip(getRandomTip("breathing"));
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {

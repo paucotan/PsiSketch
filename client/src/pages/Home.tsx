@@ -95,6 +95,7 @@ export default function Home() {
       {screen === "reveal" && (
         <RevealScreen 
           targetImage={targetImage}
+          drawing={drawing}
           onRatingChange={setRating}
           onNotesChange={setNotes}
           onSaveSession={handleSaveSession}

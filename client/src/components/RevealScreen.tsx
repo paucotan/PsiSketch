@@ -1,10 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import GuidanceTip, { getRandomTip } from "@/components/GuidanceTips";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Separator } from "@/components/ui/separator";
 
 interface RevealScreenProps {
   targetImage: string;
+  drawing: string; // Add drawing prop
   rating: string;
   notes: string;
   onRatingChange: (rating: "hit" | "miss" | "maybe") => void;
@@ -15,6 +17,7 @@ interface RevealScreenProps {
 
 export default function RevealScreen({
   targetImage,
+  drawing,
   rating,
   notes,
   onRatingChange,
@@ -22,7 +25,12 @@ export default function RevealScreen({
   onSaveSession,
   onShareSession,
 }: RevealScreenProps) {
-  const [guidanceTip, setGuidanceTip] = useState<string>(getRandomTip("reveal"));
+  const [guidanceTip, setGuidanceTip] = useState<string>("");
+  
+  // Set the guidance tip in useEffect to avoid state updates during render
+  useEffect(() => {
+    setGuidanceTip(getRandomTip("reveal"));
+  }, []);
   
   const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     onNotesChange(e.target.value);
@@ -32,11 +40,40 @@ export default function RevealScreen({
     <div className="screen flex flex-col h-full">
       <div className="flex-grow relative overflow-hidden bg-black">
         <GuidanceTip tip={guidanceTip} screen="reveal" />
-        <img
-          src={targetImage}
-          alt="Random reveal image"
-          className="w-full h-full object-contain"
-        />
+        
+        {/* Side-by-side comparison */}
+        <div className="w-full h-full flex flex-col md:flex-row">
+          {/* Your Drawing */}
+          <div className="flex-1 flex flex-col">
+            <div className="bg-gray-900 p-2 text-center text-sm text-gray-400">
+              Your Drawing
+            </div>
+            <div className="flex-1 flex items-center justify-center p-2">
+              <img
+                src={drawing}
+                alt="Your drawing"
+                className="max-w-full max-h-full object-contain"
+              />
+            </div>
+          </div>
+          
+          {/* Separator */}
+          <div className="w-full h-[1px] md:w-[1px] md:h-full bg-gray-800"></div>
+          
+          {/* Target Image */}
+          <div className="flex-1 flex flex-col">
+            <div className="bg-gray-900 p-2 text-center text-sm text-gray-400">
+              Target Image
+            </div>
+            <div className="flex-1 flex items-center justify-center p-2">
+              <img
+                src={targetImage}
+                alt="Target image"
+                className="max-w-full max-h-full object-contain"
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="p-6 bg-card">
