@@ -41,9 +41,15 @@ export default function BreathingScreen({
       <GuidanceTip tip={guidanceTip} screen="breathing" />
       
       <h2 className="text-xl font-medium mb-8 text-foreground">Take a moment to focus</h2>
-      <div className="relative mb-10">
-        <div className="absolute inset-0 rounded-full bg-primary bg-opacity-20 animate-breath"></div>
-        <div className="text-muted-foreground text-sm mt-64">Breathe in... and out...</div>
+      <div className="relative mb-8 flex flex-col items-center">
+        {/* Sphere animation */}
+        <div className="w-40 h-40 rounded-full bg-primary bg-opacity-20 animate-breath flex items-center justify-center">
+          <div className="w-28 h-28 rounded-full bg-primary bg-opacity-30 animate-breath"></div>
+        </div>
+        <div className="mt-8 text-muted-foreground text-base">
+          <p className="font-medium mb-2">Close your eyes</p>
+          <p>Breathe in... and out...</p>
+        </div>
       </div>
       <div className="text-4xl font-light text-foreground mb-12">{seconds}</div>
       <Button 
