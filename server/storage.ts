@@ -143,14 +143,14 @@ export class DatabaseStorage implements IStorage {
 // Memory fallback for development if needed
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
-  private sessionStore: Map<number, Session>;
+  private sessions: Map<number, Session>;
   currentUserId: number;
   currentSessionId: number;
   public sessionStore: session.Store;
 
   constructor() {
     this.users = new Map();
-    this.sessionStore = new Map();
+    this.sessions = new Map();
     this.currentUserId = 1;
     this.currentSessionId = 1;
     
@@ -181,17 +181,17 @@ export class MemStorage implements IStorage {
 
   // Session operations
   async getSession(id: number): Promise<Session | undefined> {
-    return this.sessionStore.get(id);
+    return this.sessions.get(id);
   }
 
   async getSessions(): Promise<Session[]> {
-    return Array.from(this.sessionStore.values()).sort((a, b) => {
+    return Array.from(this.sessions.values()).sort((a, b) => {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
   }
   
   async getSessionsByCategory(category: string): Promise<Session[]> {
-    return Array.from(this.sessionStore.values())
+    return Array.from(this.sessions.values())
       .filter(session => session.category === category)
       .sort((a, b) => {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -206,17 +206,26 @@ export class MemStorage implements IStorage {
   async createSession(insertSession: InsertSession): Promise<Session> {
     const id = this.currentSessionId++;
     const now = new Date();
+    
+    // Ensure required fields are set
+    const sessionWithDefaults: InsertSession = {
+      ...insertSession,
+      notes: insertSession.notes || null,
+      category: insertSession.category || null,
+    };
+    
     const session: Session = { 
-      ...insertSession, 
+      ...sessionWithDefaults, 
       id, 
       createdAt: now 
     };
-    this.sessionStore.set(id, session);
+    
+    this.sessions.set(id, session);
     return session;
   }
 
   async deleteSession(id: number): Promise<boolean> {
-    return this.sessionStore.delete(id);
+    return this.sessions.delete(id);
   }
   
   // Statistics

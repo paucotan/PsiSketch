@@ -87,11 +87,108 @@ export default function ShareModal({ drawing, targetImage, onClose }: ShareModal
       });
   };
 
-  const handleTwitterShare = () => {
-    const text = "Check out my remote viewing practice session!";
-    const url = shareLink;
-    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+  const handleTwitterShare = async () => {
+    try {
+      // Create a div to compose the images
+      const compDiv = document.createElement("div");
+      compDiv.style.display = "flex";
+      compDiv.style.width = "800px";
+      compDiv.style.height = "400px";
+      compDiv.style.backgroundColor = "#000";
+      
+      // Add drawing image
+      const drawingImg = document.createElement("img");
+      drawingImg.src = drawing;
+      drawingImg.style.width = "50%";
+      drawingImg.style.height = "100%";
+      drawingImg.style.objectFit = "contain";
+      
+      // Add target image
+      const targetImg = document.createElement("img");
+      targetImg.src = targetImage;
+      targetImg.style.width = "50%";
+      targetImg.style.height = "100%";
+      targetImg.style.objectFit = "contain";
+      
+      compDiv.appendChild(drawingImg);
+      compDiv.appendChild(targetImg);
+      
+      // Temporarily append to body (hidden)
+      compDiv.style.position = "fixed";
+      compDiv.style.left = "-9999px";
+      document.body.appendChild(compDiv);
+      
+      // Use html2canvas to create a canvas from the div
+      const canvas = await html2canvas(compDiv);
+      
+      // Get dataURL from canvas
+      const dataUrl = canvas.toDataURL("image/png");
+      
+      // Clean up
+      document.body.removeChild(compDiv);
+      
+      // Create a blob from the dataURL
+      const blobData = dataURItoBlob(dataUrl);
+      
+      // Create a File object from the blob
+      const file = new File([blobData], "remote-viewing-session.png", { type: "image/png" });
+      
+      // Create a new FormData object and append the file
+      const formData = new FormData();
+      formData.append("image", file);
+      
+      // Create share text
+      const text = "Check out my remote viewing practice session! #RemoteViewing";
+      
+      // We can't directly attach images to tweets via intent URL,
+      // but we can download the image and then encourage users to attach it
+      
+      // Download the image first
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = "remote-viewing-session.png";
+      a.click();
+      
+      // Then open Twitter intent with text
+      setTimeout(() => {
+        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+        window.open(twitterUrl, '_blank');
+        
+        // Show instruction toast
+        toast({
+          title: "Image Downloaded",
+          description: "Please attach the downloaded image to your tweet for better sharing!",
+        });
+      }, 500);
+      
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error",
+        description: "Failed to prepare image for sharing",
+        variant: "destructive",
+      });
+      
+      // Fallback to just sharing the link
+      const text = "Check out my remote viewing practice session!";
+      const url = shareLink;
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+    }
   };
+  
+  // Helper function to convert dataURI to Blob
+  function dataURItoBlob(dataURI: string) {
+    const byteString = atob(dataURI.split(',')[1]);
+    const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    
+    return new Blob([ab], { type: mimeString });
+  }
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-80 z-50">

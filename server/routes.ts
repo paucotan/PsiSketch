@@ -60,7 +60,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
       
-      res.json(response.data);
+      // Add the category to the response so we can store it with the session
+      const responseWithCategory = {
+        ...response.data,
+        category: randomCategory
+      };
+      
+      res.json(responseWithCategory);
     } catch (error) {
       console.error("Error fetching random image:", error);
       
@@ -74,6 +80,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: "An error occurred while fetching a random image",
         });
       }
+    }
+  });
+  
+  // Session management endpoints
+  app.post("/api/sessions", async (req, res) => {
+    try {
+      const sessionData = req.body;
+      const result = await storage.createSession(sessionData);
+      res.status(201).json(result);
+    } catch (error) {
+      console.error("Error creating session:", error);
+      res.status(500).json({
+        message: "Failed to save session"
+      });
+    }
+  });
+  
+  app.get("/api/sessions", async (req, res) => {
+    try {
+      const sessions = await storage.getSessions();
+      res.json(sessions);
+    } catch (error) {
+      console.error("Error fetching sessions:", error);
+      res.status(500).json({
+        message: "Failed to fetch sessions"
+      });
+    }
+  });
+
+  app.get("/api/sessions/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const session = await storage.getSession(id);
+      
+      if (!session) {
+        return res.status(404).json({
+          message: "Session not found"
+        });
+      }
+      
+      res.json(session);
+    } catch (error) {
+      console.error("Error fetching session:", error);
+      res.status(500).json({
+        message: "Failed to fetch session"
+      });
+    }
+  });
+  
+  app.delete("/api/sessions/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteSession(id);
+      
+      if (!success) {
+        return res.status(404).json({
+          message: "Session not found or could not be deleted"
+        });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting session:", error);
+      res.status(500).json({
+        message: "Failed to delete session"
+      });
+    }
+  });
+  
+  // Get practice statistics
+  app.get("/api/stats", async (req, res) => {
+    try {
+      const stats = await storage.getSessionStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching statistics:", error);
+      res.status(500).json({
+        message: "Failed to fetch practice statistics"
+      });
     }
   });
 
