@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface UseCanvasProps {
   width?: number;
@@ -9,178 +9,118 @@ interface UseCanvasProps {
 
 export const useCanvas = ({
   width = window.innerWidth,
-  height = window.innerHeight,
+  height = window.innerHeight - 100,
   color = '#FFFFFF',
-  lineWidth = 5,
+  lineWidth = 5
 }: UseCanvasProps = {}) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const isDrawingRef = useRef(false);
+  const prevPointRef = useRef<{ x: number; y: number } | null>(null);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [currentTool, setCurrentTool] = useState<'pen' | 'eraser'>('pen');
+  const colorRef = useRef(color);
+  const lineWidthRef = useRef(lineWidth);
+  const toolRef = useRef<'pen' | 'eraser'>('pen');
 
-  // Initialize canvas context
   const initializeCanvas = (canvas: HTMLCanvasElement) => {
-    // Get device pixel ratio
-    const dpr = window.devicePixelRatio || 1;
+    if (!canvas) return;
     
-    // Set the canvas dimensions with pixel ratio for high-res screens
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
-    canvas.style.width = `${width}px`;
-    canvas.style.height = `${height}px`;
+    // Set canvas size
+    canvas.width = width;
+    canvas.height = height;
     
-    // Get context and configure
+    // Get context
     const context = canvas.getContext('2d');
     if (context) {
-      context.scale(dpr, dpr);
+      // Initialize with black background
+      context.fillStyle = 'black';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Set drawing styles
       context.lineCap = 'round';
       context.lineJoin = 'round';
       context.strokeStyle = color;
       context.lineWidth = lineWidth;
-      context.fillStyle = 'black';
-      context.fillRect(0, 0, width, height);
       
+      // Store context
       contextRef.current = context;
     }
   };
 
-  // Start drawing
-  const startDrawing = (event: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+  const startDrawing = (x: number, y: number) => {
     if (!contextRef.current) return;
     
-    // Get mouse/touch position
-    let clientX, clientY;
-    
-    if ('touches' in event) {
-      clientX = event.touches[0].clientX;
-      clientY = event.touches[0].clientY;
-    } else {
-      clientX = event.clientX;
-      clientY = event.clientY;
-    }
-    
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
-    
-    contextRef.current.beginPath();
-    contextRef.current.moveTo(x, y);
-    setIsDrawing(true);
+    isDrawingRef.current = true;
+    prevPointRef.current = { x, y };
   };
 
-  // Continue drawing
-  const draw = (event: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    if (!isDrawing || !contextRef.current) return;
+  const draw = (x: number, y: number) => {
+    if (!isDrawingRef.current || !contextRef.current || !prevPointRef.current) return;
     
-    // Get mouse/touch position
-    let clientX, clientY;
+    const ctx = contextRef.current;
     
-    if ('touches' in event) {
-      // Prevent scrolling when drawing
-      event.preventDefault();
-      
-      clientX = event.touches[0].clientX;
-      clientY = event.touches[0].clientY;
+    if (toolRef.current === 'pen') {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = colorRef.current;
     } else {
-      clientX = event.clientX;
-      clientY = event.clientY;
+      ctx.globalCompositeOperation = 'destination-out';
     }
     
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (!rect) return;
+    ctx.beginPath();
+    ctx.moveTo(prevPointRef.current.x, prevPointRef.current.y);
+    ctx.lineTo(x, y);
+    ctx.stroke();
     
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
-    
-    contextRef.current.lineTo(x, y);
-    contextRef.current.stroke();
+    prevPointRef.current = { x, y };
   };
 
-  // Stop drawing
   const stopDrawing = () => {
-    if (!contextRef.current) return;
-    contextRef.current.closePath();
-    setIsDrawing(false);
+    isDrawingRef.current = false;
+    prevPointRef.current = null;
   };
 
-  // Change drawing tool
   const setTool = (tool: 'pen' | 'eraser') => {
-    if (!contextRef.current) return;
+    toolRef.current = tool;
     
-    setCurrentTool(tool);
+    if (!contextRef.current) return;
     
     if (tool === 'pen') {
-      contextRef.current.strokeStyle = color;
-      contextRef.current.lineWidth = lineWidth;
+      contextRef.current.globalCompositeOperation = 'source-over';
+      contextRef.current.strokeStyle = colorRef.current;
+      contextRef.current.lineWidth = lineWidthRef.current;
     } else {
-      contextRef.current.strokeStyle = 'black';
-      contextRef.current.lineWidth = lineWidth * 4;
+      contextRef.current.globalCompositeOperation = 'destination-out';
+      contextRef.current.lineWidth = lineWidthRef.current * 4;
     }
   };
 
-  // Change color
   const setColor = (newColor: string) => {
-    if (!contextRef.current) return;
-    
-    if (currentTool === 'pen') {
+    colorRef.current = newColor;
+    if (contextRef.current && toolRef.current === 'pen') {
       contextRef.current.strokeStyle = newColor;
     }
   };
 
-  // Clear canvas
   const clearCanvas = () => {
     if (!contextRef.current || !canvasRef.current) return;
     
     contextRef.current.fillStyle = 'black';
-    contextRef.current.fillRect(0, 0, width, height);
+    contextRef.current.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
   };
 
-  // Get canvas image as data URL
-  const getImageData = (): string => {
+  const getCanvasImage = (): string => {
     if (!canvasRef.current) return '';
     return canvasRef.current.toDataURL('image/png');
   };
 
-  // Handle window resize
-  useEffect(() => {
-    const handleResize = () => {
-      if (!canvasRef.current || !contextRef.current) return;
-      
-      // Save the current drawing
-      const imageData = getImageData();
-      
-      // Resize canvas
-      const newWidth = window.innerWidth;
-      const newHeight = window.innerHeight;
-      
-      initializeCanvas(canvasRef.current);
-      
-      // Restore drawing if needed
-      if (imageData) {
-        const img = new Image();
-        img.onload = () => {
-          contextRef.current?.drawImage(img, 0, 0, newWidth, newHeight);
-        };
-        img.src = imageData;
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   return {
     canvasRef,
+    initializeCanvas,
     startDrawing,
     draw,
     stopDrawing,
     setTool,
     setColor,
     clearCanvas,
-    getImageData,
-    isDrawing,
-    currentTool,
+    getCanvasImage
   };
 };
