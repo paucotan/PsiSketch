@@ -1,4 +1,4 @@
-import { useEffect, useImperativeHandle, forwardRef, useRef } from "react";
+import { useEffect, useImperativeHandle, forwardRef, useRef, useState } from "react";
 
 interface DrawingCanvasProps {
   tool: string;
@@ -12,36 +12,52 @@ const DrawingCanvas = forwardRef(({ tool, color, onDrawingChange }: DrawingCanva
   const isDrawing = useRef(false);
   const lastX = useRef(0);
   const lastY = useRef(0);
+  const [canvasReady, setCanvasReady] = useState(false);
   
-  // Initialize canvas
+  // Initialize canvas on first render
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    // Set canvas size to fill the container
-    const resizeCanvas = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight - 100; // Adjust for header and tools
+    const initCanvas = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
       
-      // Set up canvas context
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.fillStyle = "black";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        ctx.lineWidth = 5;
-        ctx.strokeStyle = color;
-        contextRef.current = ctx;
-      }
+      // For high DPI displays
+      const dpr = window.devicePixelRatio || 1;
+      
+      // Get display dimensions
+      const rect = canvas.getBoundingClientRect();
+      
+      // Set canvas dimensions with pixel ratio adjustment
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      
+      // Scale the context to ensure correct drawing
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      if (!ctx) return;
+      
+      ctx.scale(dpr, dpr);
+      
+      // Configure context
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = color;
+      contextRef.current = ctx;
+      
+      setCanvasReady(true);
     };
     
-    resizeCanvas();
-    window.addEventListener("resize", resizeCanvas);
+    // Initialize canvas and set up resize handler
+    initCanvas();
     
-    return () => {
-      window.removeEventListener("resize", resizeCanvas);
+    const handleResize = () => {
+      // Delay canvas resize to avoid mobile keyboard issues
+      setTimeout(initCanvas, 100);
     };
+    
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
   
   // Update drawing color and tool
@@ -59,123 +75,110 @@ const DrawingCanvas = forwardRef(({ tool, color, onDrawingChange }: DrawingCanva
     }
   }, [tool, color]);
   
-  // Touch event handling - must be outside to properly prevent default
+  // Set up all event handlers once canvas is ready
   useEffect(() => {
+    if (!canvasReady) return;
+    
     const canvas = canvasRef.current;
     if (!canvas) return;
     
-    const handleTouchStart = (e: TouchEvent) => {
-      e.preventDefault(); // Prevent default to avoid iOS selection behavior
+    // Common drawing functions used by both mouse and touch
+    const drawStart = (x: number, y: number) => {
       isDrawing.current = true;
       
-      const clientX = e.touches[0].clientX;
-      const clientY = e.touches[0].clientY;
-      
       const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      
-      lastX.current = (clientX - rect.left) * scaleX;
-      lastY.current = (clientY - rect.top) * scaleY;
+      // Normalize coordinates
+      lastX.current = x - rect.left;
+      lastY.current = y - rect.top;
     };
     
-    const handleTouchMove = (e: TouchEvent) => {
-      e.preventDefault(); // Prevent iOS scrolling
+    const drawMove = (x: number, y: number) => {
       if (!isDrawing.current || !contextRef.current) return;
       
-      const clientX = e.touches[0].clientX;
-      const clientY = e.touches[0].clientY;
-      
       const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      
-      const x = (clientX - rect.left) * scaleX;
-      const y = (clientY - rect.top) * scaleY;
+      const currX = x - rect.left;
+      const currY = y - rect.top;
       
       const ctx = contextRef.current;
       ctx.beginPath();
       ctx.moveTo(lastX.current, lastY.current);
-      ctx.lineTo(x, y);
+      ctx.lineTo(currX, currY);
       ctx.stroke();
       
-      lastX.current = x;
-      lastY.current = y;
+      lastX.current = currX;
+      lastY.current = currY;
     };
     
-    const handleTouchEnd = (e: TouchEvent) => {
-      e.preventDefault();
+    const drawEnd = () => {
       isDrawing.current = false;
       saveDrawingData();
     };
     
-    // Add passive: false to properly prevent default behavior
+    // Mouse event handlers
+    const handleMouseDown = (e: MouseEvent) => {
+      e.preventDefault();
+      drawStart(e.clientX, e.clientY);
+    };
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      e.preventDefault();
+      drawMove(e.clientX, e.clientY);
+    };
+    
+    const handleMouseUp = (e: MouseEvent) => {
+      e.preventDefault();
+      drawEnd();
+    };
+    
+    const handleMouseLeave = (e: MouseEvent) => {
+      e.preventDefault();
+      if (isDrawing.current) {
+        drawEnd();
+      }
+    };
+    
+    // Touch event handlers
+    const handleTouchStart = (e: TouchEvent) => {
+      e.preventDefault();
+      if (e.touches.length > 0) {
+        drawStart(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    };
+    
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      if (e.touches.length > 0) {
+        drawMove(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    };
+    
+    const handleTouchEnd = (e: TouchEvent) => {
+      e.preventDefault();
+      drawEnd();
+    };
+    
+    // Add all event listeners - use direct DOM API for consistent behavior
+    canvas.addEventListener('mousedown', handleMouseDown);
+    canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('mouseup', handleMouseUp);
+    canvas.addEventListener('mouseleave', handleMouseLeave);
+    
+    // Important: { passive: false } is required for preventing scrolling on touch devices
     canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
     
+    // Cleanup
     return () => {
+      canvas.removeEventListener('mousedown', handleMouseDown);
+      canvas.removeEventListener('mousemove', handleMouseMove);
+      canvas.removeEventListener('mouseup', handleMouseUp);
+      canvas.removeEventListener('mouseleave', handleMouseLeave);
       canvas.removeEventListener('touchstart', handleTouchStart);
       canvas.removeEventListener('touchmove', handleTouchMove);
       canvas.removeEventListener('touchend', handleTouchEnd);
     };
-  }, []);
-
-  // Drawing handlers for mouse events
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if ('touches' in e) return; // Now only handle mouse events here
-    
-    isDrawing.current = true;
-    
-    const clientX = e.clientX;
-    const clientY = e.clientY;
-    
-    // Adjust for canvas position and scale
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (rect) {
-      // Get the scale factor (in case canvas is styled with CSS)
-      const scaleX = canvasRef.current!.width / rect.width;
-      const scaleY = canvasRef.current!.height / rect.height;
-      
-      // Calculate the correct position
-      lastX.current = (clientX - rect.left) * scaleX;
-      lastY.current = (clientY - rect.top) * scaleY;
-    }
-  };
-  
-  const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if ('touches' in e) return; // Now only handle mouse events here
-    if (!isDrawing.current || !contextRef.current) return;
-    
-    const clientX = e.clientX;
-    const clientY = e.clientY;
-    
-    // Adjust for canvas position and scale
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (rect) {
-      // Get the scale factor (in case canvas is styled with CSS)
-      const scaleX = canvasRef.current!.width / rect.width;
-      const scaleY = canvasRef.current!.height / rect.height;
-      
-      // Calculate the correct position
-      const x = (clientX - rect.left) * scaleX;
-      const y = (clientY - rect.top) * scaleY;
-      
-      const ctx = contextRef.current;
-      ctx.beginPath();
-      ctx.moveTo(lastX.current, lastY.current);
-      ctx.lineTo(x, y);
-      ctx.stroke();
-      
-      lastX.current = x;
-      lastY.current = y;
-    }
-  };
-  
-  const stopDrawing = () => {
-    isDrawing.current = false;
-    saveDrawingData();
-  };
+  }, [canvasReady]); // Only re-run when canvas becomes ready
   
   const saveDrawingData = () => {
     if (canvasRef.current) {
@@ -192,7 +195,12 @@ const DrawingCanvas = forwardRef(({ tool, color, onDrawingChange }: DrawingCanva
   useImperativeHandle(ref, () => ({
     getImageData: () => {
       if (!canvasRef.current) return "";
-      return canvasRef.current.toDataURL("image/png");
+      try {
+        return canvasRef.current.toDataURL("image/png");
+      } catch (error) {
+        console.error("Error getting image data:", error);
+        return "";
+      }
     },
     setTool: (toolId: string) => {
       // This is handled by the tool state and useEffect
@@ -213,11 +221,11 @@ const DrawingCanvas = forwardRef(({ tool, color, onDrawingChange }: DrawingCanva
       ref={canvasRef}
       id="drawing-canvas" 
       className="canvas-container absolute inset-0 w-full h-full" 
-      onMouseDown={startDrawing}
-      onMouseMove={draw}
-      onMouseUp={stopDrawing}
-      onMouseLeave={stopDrawing}
-      // Touch events are handled via direct event listeners with { passive: false }
+      style={{ 
+        touchAction: 'none',
+        WebkitTapHighlightColor: 'transparent',
+        userSelect: 'none',
+      }}
     />
   );
 });
