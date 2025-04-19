@@ -76,7 +76,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen relative overflow-hidden">
+    <div className={`flex flex-col h-screen w-screen relative ${screen === "welcome" ? "overflow-visible" : "overflow-hidden"}`}>
       {screen === "welcome" && (
         <WelcomeScreen 
           onStartSession={handleStartSession} 
