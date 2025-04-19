@@ -1,0 +1,61 @@
+# PsiSketch
+
+![PsiSketch Logo](client/src/assets/logo.png)
+
+A mobile-first remote viewing practice application that helps users explore their intuitive perception abilities through a guided drawing experience.
+
+## 🔮 About PsiSketch
+
+PsiSketch is an interactive web application designed for practicing remote viewing exercises. The app guides users through a structured process:
+
+1. **Breathing Exercise**: Begin with a calming breathing exercise to clear your mind
+2. **Drawing Phase**: Draw your impressions of a hidden target image
+3. **Reveal Phase**: See the target image and compare it with your drawing
+4. **Feedback Loop**: Rate your performance and save notes about your experience
+
+The application keeps track of your practice sessions, allowing you to review past attempts and track your progress over time.
+
+## ✨ Features
+
+- **Guided Practice**: Step-by-step interface for remote viewing exercises
+- **Drawing Tools**: Simple drawing canvas with color and brush options
+- **Random Targets**: Hidden target images randomly selected from various categories
+- **Session History**: Review past practice sessions with ratings and notes
+- **Side-by-Side Comparison**: Compare your drawing with the target image
+- **Shareable Results**: Download and share your results with the community
+- **Beautiful UI**: Dark mode interface with intuitive controls
+- **Mobile-First**: Optimized for both mobile and desktop experiences
+- **Database Integration**: Save your sessions across devices
+
+## 🖼️ Screenshots
+
+![PsiSketch App](screenshots/app-screenshot.png)
+
+## 🚀 Technologies Used
+
+- **Frontend**:
+  - React with TypeScript
+  - Tailwind CSS for styling
+  - Fabric.js for canvas drawing
+
+- **Backend**:
+  - Node.js with Express
+  - PostgreSQL with Drizzle ORM
+  - RESTful API architecture
+
+## 🛠️ Getting Started
+
+See the [SETUP.md](SETUP.md) guide for detailed instructions on:
+- Downloading the code
+- Setting up your development environment
+- Deploying to Vercel with a PostgreSQL database
+
+## 📝 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🙏 Acknowledgments
+
+- Unsplash for providing the image API
+- Replit for the development environment
+- Remote Viewing community for inspiration and feedback
