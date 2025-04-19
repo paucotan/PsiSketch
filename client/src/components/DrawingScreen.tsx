@@ -85,7 +85,10 @@ export default function DrawingScreen({
           ref={canvasRef}
           tool={activeToolId}
           color={color}
-          onDrawingChange={(data) => onDrawingChange(data)}
+          onDrawingChange={(data) => {
+            console.log("Drawing data changed");
+            onDrawingChange(data);
+          }}
         />
       </div>
 
