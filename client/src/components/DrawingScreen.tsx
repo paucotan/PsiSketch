@@ -4,6 +4,7 @@ import DrawingCanvas from "@/components/DrawingCanvas";
 import { fetchRandomImage } from "@/lib/unsplash";
 import { useToast } from "@/hooks/use-toast";
 import GuidanceTip, { getRandomTip } from "@/components/GuidanceTips";
+import { FaPencilAlt, FaEraser, FaTrash } from "react-icons/fa";
 
 interface DrawingScreenProps {
   onDrawingChange: (drawingData: string) => void;
@@ -91,19 +92,19 @@ export default function DrawingScreen({
       <div className="drawing-tools flex justify-around items-center p-3 bg-card">
         <button
           onClick={() => handleToolChange("pen-tool")}
-          className={`tool-button p-2 rounded-full ${
+          className={`tool-button p-3 rounded-full ${
             activeToolId === "pen-tool" ? "bg-muted" : ""
           }`}
         >
-          <span className="material-icons text-foreground">edit</span>
+          <FaPencilAlt className="text-foreground text-lg" />
         </button>
         <button
           onClick={() => handleToolChange("eraser-tool")}
-          className={`tool-button p-2 rounded-full ${
+          className={`tool-button p-3 rounded-full ${
             activeToolId === "eraser-tool" ? "bg-muted" : ""
           }`}
         >
-          <span className="material-icons text-muted-foreground">backspace</span>
+          <FaEraser className="text-muted-foreground text-lg" />
         </button>
         <div className="flex justify-center items-center space-x-2">
           <input
@@ -117,9 +118,9 @@ export default function DrawingScreen({
         </div>
         <button
           onClick={handleClearCanvas}
-          className="tool-button p-2 rounded-full"
+          className="tool-button p-3 rounded-full"
         >
-          <span className="material-icons text-muted-foreground">delete_outline</span>
+          <FaTrash className="text-muted-foreground text-lg" />
         </button>
       </div>
     </div>

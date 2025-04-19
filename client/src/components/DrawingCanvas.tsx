@@ -84,32 +84,47 @@ const DrawingCanvas = forwardRef(({ tool, color, onDrawingChange }: DrawingCanva
     
     // Common drawing functions used by both mouse and touch
     const drawStart = (x: number, y: number) => {
+      console.log("Drawing started at:", x, y);
       isDrawing.current = true;
       
       const rect = canvas.getBoundingClientRect();
       // Normalize coordinates
-      lastX.current = x - rect.left;
-      lastY.current = y - rect.top;
+      const dpr = window.devicePixelRatio || 1;
+      lastX.current = (x - rect.left);
+      lastY.current = (y - rect.top);
+      
+      // Also draw a single point at start for better tap response
+      if (contextRef.current) {
+        const ctx = contextRef.current;
+        ctx.beginPath();
+        ctx.arc(lastX.current, lastY.current, ctx.lineWidth / 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
     };
     
     const drawMove = (x: number, y: number) => {
       if (!isDrawing.current || !contextRef.current) return;
       
       const rect = canvas.getBoundingClientRect();
-      const currX = x - rect.left;
-      const currY = y - rect.top;
+      const currX = (x - rect.left);
+      const currY = (y - rect.top);
       
-      const ctx = contextRef.current;
-      ctx.beginPath();
-      ctx.moveTo(lastX.current, lastY.current);
-      ctx.lineTo(currX, currY);
-      ctx.stroke();
-      
-      lastX.current = currX;
-      lastY.current = currY;
+      // Only draw if there's been some movement
+      if (Math.abs(currX - lastX.current) + Math.abs(currY - lastY.current) > 0) {
+        const ctx = contextRef.current;
+        ctx.beginPath();
+        ctx.moveTo(lastX.current, lastY.current);
+        ctx.lineTo(currX, currY);
+        ctx.stroke();
+        
+        console.log("Drawing line from", lastX.current, lastY.current, "to", currX, currY);
+        lastX.current = currX;
+        lastY.current = currY;
+      }
     };
     
     const drawEnd = () => {
+      console.log("Drawing ended");
       isDrawing.current = false;
       saveDrawingData();
     };
@@ -117,12 +132,16 @@ const DrawingCanvas = forwardRef(({ tool, color, onDrawingChange }: DrawingCanva
     // Mouse event handlers
     const handleMouseDown = (e: MouseEvent) => {
       e.preventDefault();
+      console.log("Mouse down:", e.clientX, e.clientY);
       drawStart(e.clientX, e.clientY);
     };
     
     const handleMouseMove = (e: MouseEvent) => {
       e.preventDefault();
-      drawMove(e.clientX, e.clientY);
+      if (isDrawing.current) {
+        console.log("Mouse move with drawing active:", e.clientX, e.clientY);
+        drawMove(e.clientX, e.clientY);
+      }
     };
     
     const handleMouseUp = (e: MouseEvent) => {
@@ -141,13 +160,15 @@ const DrawingCanvas = forwardRef(({ tool, color, onDrawingChange }: DrawingCanva
     const handleTouchStart = (e: TouchEvent) => {
       e.preventDefault();
       if (e.touches.length > 0) {
+        console.log("Touch start:", e.touches[0].clientX, e.touches[0].clientY);
         drawStart(e.touches[0].clientX, e.touches[0].clientY);
       }
     };
     
     const handleTouchMove = (e: TouchEvent) => {
       e.preventDefault();
-      if (e.touches.length > 0) {
+      if (isDrawing.current && e.touches.length > 0) {
+        console.log("Touch move:", e.touches[0].clientX, e.touches[0].clientY);
         drawMove(e.touches[0].clientX, e.touches[0].clientY);
       }
     };
