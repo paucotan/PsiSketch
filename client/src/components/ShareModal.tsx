@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import html2canvas from 'html2canvas';
+import { createComparisonImage, downloadImage } from "@/lib/imageUtils";
 
 interface ShareModalProps {
   drawing: string;
@@ -16,57 +17,76 @@ export default function ShareModal({ drawing, targetImage, onClose }: ShareModal
 
   const handleDownload = async () => {
     try {
-      // Create a div to compose the images
-      const compDiv = document.createElement("div");
-      compDiv.style.display = "flex";
-      compDiv.style.width = "800px";
-      compDiv.style.height = "400px";
-      compDiv.style.backgroundColor = "#000";
-      
-      // Add drawing image
-      const drawingImg = document.createElement("img");
-      drawingImg.src = drawing;
-      drawingImg.style.width = "50%";
-      drawingImg.style.height = "100%";
-      drawingImg.style.objectFit = "contain";
-      
-      // Add target image
-      const targetImg = document.createElement("img");
-      targetImg.src = targetImage;
-      targetImg.style.width = "50%";
-      targetImg.style.height = "100%";
-      targetImg.style.objectFit = "contain";
-      
-      compDiv.appendChild(drawingImg);
-      compDiv.appendChild(targetImg);
-      
-      // Temporarily append to body (hidden)
-      compDiv.style.position = "fixed";
-      compDiv.style.left = "-9999px";
-      document.body.appendChild(compDiv);
-      
-      // Use html2canvas to create a canvas from the div
-      const canvas = await html2canvas(compDiv);
-      
-      // Create download link
-      const a = document.createElement("a");
-      a.href = canvas.toDataURL("image/png");
-      a.download = "remote-viewing-session.png";
-      a.click();
-      
-      // Clean up
-      document.body.removeChild(compDiv);
+      const comparisonTitle = "PsiSketch Session";
+      const combinedImage = await createComparisonImage(drawing, targetImage, comparisonTitle);
+      downloadImage(combinedImage, "psisketch-session.png");
       
       toast({
         title: "Success",
-        description: "Image downloaded successfully",
+        description: "Combined image downloaded successfully",
       });
     } catch (error) {
+      console.error('Failed to create comparison image:', error);
       toast({
         title: "Error",
-        description: "Failed to download image",
+        description: "Failed to download image. Trying fallback method...",
         variant: "destructive",
       });
+      
+      // Fallback to the old method
+      try {
+        // Create a div to compose the images
+        const compDiv = document.createElement("div");
+        compDiv.style.display = "flex";
+        compDiv.style.width = "800px";
+        compDiv.style.height = "400px";
+        compDiv.style.backgroundColor = "#000";
+        
+        // Add drawing image
+        const drawingImg = document.createElement("img");
+        drawingImg.src = drawing;
+        drawingImg.style.width = "50%";
+        drawingImg.style.height = "100%";
+        drawingImg.style.objectFit = "contain";
+        
+        // Add target image
+        const targetImg = document.createElement("img");
+        targetImg.src = targetImage;
+        targetImg.style.width = "50%";
+        targetImg.style.height = "100%";
+        targetImg.style.objectFit = "contain";
+        
+        compDiv.appendChild(drawingImg);
+        compDiv.appendChild(targetImg);
+        
+        // Temporarily append to body (hidden)
+        compDiv.style.position = "fixed";
+        compDiv.style.left = "-9999px";
+        document.body.appendChild(compDiv);
+        
+        // Use html2canvas to create a canvas from the div
+        const canvas = await html2canvas(compDiv);
+        
+        // Create download link
+        const a = document.createElement("a");
+        a.href = canvas.toDataURL("image/png");
+        a.download = "psisketch-session.png";
+        a.click();
+        
+        // Clean up
+        document.body.removeChild(compDiv);
+        
+        toast({
+          title: "Success",
+          description: "Image downloaded with fallback method",
+        });
+      } catch (secondError) {
+        toast({
+          title: "Error",
+          description: "All download methods failed",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -89,65 +109,15 @@ export default function ShareModal({ drawing, targetImage, onClose }: ShareModal
 
   const handleTwitterShare = async () => {
     try {
-      // Create a div to compose the images
-      const compDiv = document.createElement("div");
-      compDiv.style.display = "flex";
-      compDiv.style.width = "800px";
-      compDiv.style.height = "400px";
-      compDiv.style.backgroundColor = "#000";
-      
-      // Add drawing image
-      const drawingImg = document.createElement("img");
-      drawingImg.src = drawing;
-      drawingImg.style.width = "50%";
-      drawingImg.style.height = "100%";
-      drawingImg.style.objectFit = "contain";
-      
-      // Add target image
-      const targetImg = document.createElement("img");
-      targetImg.src = targetImage;
-      targetImg.style.width = "50%";
-      targetImg.style.height = "100%";
-      targetImg.style.objectFit = "contain";
-      
-      compDiv.appendChild(drawingImg);
-      compDiv.appendChild(targetImg);
-      
-      // Temporarily append to body (hidden)
-      compDiv.style.position = "fixed";
-      compDiv.style.left = "-9999px";
-      document.body.appendChild(compDiv);
-      
-      // Use html2canvas to create a canvas from the div
-      const canvas = await html2canvas(compDiv);
-      
-      // Get dataURL from canvas
-      const dataUrl = canvas.toDataURL("image/png");
-      
-      // Clean up
-      document.body.removeChild(compDiv);
-      
-      // Create a blob from the dataURL
-      const blobData = dataURItoBlob(dataUrl);
-      
-      // Create a File object from the blob
-      const file = new File([blobData], "remote-viewing-session.png", { type: "image/png" });
-      
-      // Create a new FormData object and append the file
-      const formData = new FormData();
-      formData.append("image", file);
+      // Create comparison image 
+      const comparisonTitle = "PsiSketch Session";
+      const combinedImage = await createComparisonImage(drawing, targetImage, comparisonTitle);
       
       // Create share text
-      const text = "Check out my remote viewing practice session! #RemoteViewing";
-      
-      // We can't directly attach images to tweets via intent URL,
-      // but we can download the image and then encourage users to attach it
+      const text = "Check out my remote viewing practice session! #PsiSketch #RemoteViewing";
       
       // Download the image first
-      const a = document.createElement("a");
-      a.href = dataUrl;
-      a.download = "remote-viewing-session.png";
-      a.click();
+      downloadImage(combinedImage, "psisketch-session.png");
       
       // Then open Twitter intent with text
       setTimeout(() => {
