@@ -1,0 +1,58 @@
+Objective:
+
+To create a mobile-first web app that helps users practice intuitive perception (“remote viewing”) by drawing what they sense before revealing a random image. The app fosters inner stillness, mindfulness, and curiosity.
+
+⸻
+
+Core Features (MVP):
+
+1. Dark Mode Interface
+	•	Default UI theme is dark mode.
+	•	Minimalistic, distraction-free design.
+
+2. Breathing/Focus Screen (Optional Start)
+	•	Calming breathing animation or countdown (e.g., 30 seconds).
+	•	Optional skip button.
+
+3. Drawing Canvas
+	•	Fullscreen canvas for finger/stylus/mouse input.
+	•	Basic tools: Pen, Eraser, Clear Canvas.
+	•	Optional: Color selector (can be omitted for MVP).
+
+4. Random Image Generation (via Unsplash API)
+	•	Image fetched only after user finishes drawing.
+	•	Categories: diverse, random (nature, architecture, abstract, etc.).
+	•	Image is high-quality, fullscreen.
+
+5. Scoring & Feedback
+	•	After image is revealed, user self-assesses:
+	•	“Hit” / “Miss” / “Maybe”
+	•	Optional: add short text or voice note (can be saved as text transcription later).
+	•	Button to continue or discard session.
+
+6. Save & Share
+	•	Save session (drawing + revealed image + timestamp + feedback).
+	•	Option to download image or share (Twitter/X, Instagram Story, or copy link).
+
+7. Score History
+	•	Simple local history view (or lightweight cloud storage).
+	•	Shows previous sessions: drawing thumbnail, image thumbnail, feedback score.
+
+	Platform:
+	•	Web App (responsive for mobile and desktop).
+	•	Option to convert into PWA (Progressive Web App) for installable mobile experience.
+
+
+	Tech Stack Suggestions:
+	•	Frontend: React / Vue / HTML-CSS-JS
+	•	Drawing Canvas: Fabric.js / HTML Canvas API
+	•	Backend (if needed): Firebase / Supabase / Express.js
+	•	Image Source: Unsplash API
+	•	Storage: LocalStorage for MVP; optional Firebase for cloud sync
+
+	User Flow (Simple):
+	1.	Start Session → Optional Breathing Screen → Drawing Canvas
+	2.	User Draws → Hits “Reveal”
+	3.	Random Image Shows → Scoring Screen (Hit/Miss/Maybe + Feedback)
+	4.	User Saves or Shares → Session is stored
+	5.	User views Score History (optional end step)
