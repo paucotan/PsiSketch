@@ -1,5 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import GuidanceTip, { getRandomTip } from "@/components/GuidanceTips";
+import { useState } from "react";
 
 interface RevealScreenProps {
   targetImage: string;
@@ -20,6 +22,8 @@ export default function RevealScreen({
   onSaveSession,
   onShareSession,
 }: RevealScreenProps) {
+  const [guidanceTip, setGuidanceTip] = useState<string>(getRandomTip("reveal"));
+  
   const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     onNotesChange(e.target.value);
   };
@@ -27,6 +31,7 @@ export default function RevealScreen({
   return (
     <div className="screen flex flex-col h-full">
       <div className="flex-grow relative overflow-hidden bg-black">
+        <GuidanceTip tip={guidanceTip} screen="reveal" />
         <img
           src={targetImage}
           alt="Random reveal image"

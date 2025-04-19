@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import DrawingCanvas from "@/components/DrawingCanvas";
 import { fetchRandomImage } from "@/lib/unsplash";
 import { useToast } from "@/hooks/use-toast";
+import GuidanceTip, { getRandomTip } from "@/components/GuidanceTips";
 
 interface DrawingScreenProps {
   onDrawingChange: (drawingData: string) => void;
@@ -15,6 +16,7 @@ export default function DrawingScreen({
 }: DrawingScreenProps) {
   const [activeToolId, setActiveToolId] = useState("pen-tool");
   const [color, setColor] = useState("#FFFFFF");
+  const [guidanceTip, setGuidanceTip] = useState<string>(getRandomTip("drawing"));
   const canvasRef = useRef<{ 
     getImageData: () => string;
     setTool: (tool: string) => void;
@@ -72,6 +74,7 @@ export default function DrawingScreen({
       </div>
 
       <div className="flex-grow relative overflow-hidden">
+        <GuidanceTip tip={guidanceTip} screen="drawing" />
         <DrawingCanvas 
           ref={canvasRef}
           tool={activeToolId}

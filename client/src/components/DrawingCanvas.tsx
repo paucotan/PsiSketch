@@ -1,6 +1,6 @@
 import { useState, useEffect, useImperativeHandle, forwardRef, useRef } from "react";
-import * as fabricModule from "fabric";
-const fabric = fabricModule.fabric;
+// Import the fabric library according to fabric.js 6.x syntax
+import { Canvas, PencilBrush } from "fabric";
 
 interface DrawingCanvasProps {
   tool: string;
@@ -10,14 +10,14 @@ interface DrawingCanvasProps {
 
 const DrawingCanvas = forwardRef(({ tool, color, onDrawingChange }: DrawingCanvasProps, ref) => {
   const canvasElRef = useRef<HTMLCanvasElement>(null);
-  const [canvas, setCanvas] = useState<fabric.Canvas | null>(null);
+  const [canvas, setCanvas] = useState<Canvas | null>(null);
   const isDrawing = useRef(false);
 
   // Initialize canvas on component mount
   useEffect(() => {
     if (!canvasElRef.current) return;
 
-    const fabricCanvas = new fabric.Canvas(canvasElRef.current, {
+    const fabricCanvas = new Canvas(canvasElRef.current, {
       isDrawingMode: true,
       width: window.innerWidth,
       height: window.innerHeight - 100, // Adjust for header and tools
@@ -25,7 +25,7 @@ const DrawingCanvas = forwardRef(({ tool, color, onDrawingChange }: DrawingCanva
     });
 
     // Set up brush
-    fabricCanvas.freeDrawingBrush = new fabric.PencilBrush(fabricCanvas);
+    fabricCanvas.freeDrawingBrush = new PencilBrush(fabricCanvas);
     fabricCanvas.freeDrawingBrush.color = color;
     fabricCanvas.freeDrawingBrush.width = 5;
 
@@ -51,11 +51,11 @@ const DrawingCanvas = forwardRef(({ tool, color, onDrawingChange }: DrawingCanva
     if (!canvas) return;
 
     if (tool === "pen-tool") {
-      canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
+      canvas.freeDrawingBrush = new PencilBrush(canvas);
       canvas.freeDrawingBrush.color = color;
       canvas.freeDrawingBrush.width = 5;
     } else if (tool === "eraser-tool") {
-      canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
+      canvas.freeDrawingBrush = new PencilBrush(canvas);
       canvas.freeDrawingBrush.color = "black"; // Eraser is just black drawing on black background
       canvas.freeDrawingBrush.width = 20;
     }
