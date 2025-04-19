@@ -68,6 +68,12 @@ export default function Home() {
     setRating("");
     setNotes("");
   };
+  
+  // Function to handle the "Try Again" button click
+  const handleTryAgain = () => {
+    resetSession();
+    setScreen("breathing");
+  };
 
   return (
     <div className="flex flex-col h-screen w-screen relative overflow-hidden">
@@ -100,6 +106,7 @@ export default function Home() {
           onNotesChange={setNotes}
           onSaveSession={handleSaveSession}
           onShareSession={() => setShowShareModal(true)}
+          onTryAgain={handleTryAgain}
           rating={rating}
           notes={notes}
         />

@@ -13,6 +13,7 @@ interface RevealScreenProps {
   onNotesChange: (notes: string) => void;
   onSaveSession: () => void;
   onShareSession: () => void;
+  onTryAgain: () => void;
 }
 
 export default function RevealScreen({
@@ -24,6 +25,7 @@ export default function RevealScreen({
   onNotesChange,
   onSaveSession,
   onShareSession,
+  onTryAgain,
 }: RevealScreenProps) {
   const [guidanceTip, setGuidanceTip] = useState<string>("");
   
@@ -122,6 +124,17 @@ export default function RevealScreen({
           onChange={handleNotesChange}
         />
 
+        <div className="flex space-x-2 mb-4">
+          <Button
+            onClick={onTryAgain}
+            className="flex-1 bg-muted hover:bg-opacity-90 rounded-lg py-3 px-4 text-foreground font-medium"
+            variant="outline"
+          >
+            <span className="material-icons mr-1 text-foreground">refresh</span>
+            Try Again
+          </Button>
+        </div>
+        
         <div className="flex space-x-3">
           <Button
             onClick={onSaveSession}
