@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { LocalSession } from "@shared/schema";
+import { createComparisonImage, downloadImage } from "@/lib/imageUtils";
 
 interface HistoryScreenProps {
   sessions: LocalSession[];
@@ -111,20 +112,48 @@ export default function HistoryScreen({ sessions, onBackToHome }: HistoryScreenP
                           document.body.removeChild(shareModal);
                         });
                         
-                        document.getElementById('downloadShareImages')?.addEventListener('click', () => {
-                          // Download the drawing and target image
-                          const drawingLink = document.createElement('a');
-                          drawingLink.href = session.drawing;
-                          drawingLink.download = `drawing-${session.id}.png`;
-                          drawingLink.click();
-                          
-                          // Download target image
-                          setTimeout(() => {
-                            const targetLink = document.createElement('a');
-                            targetLink.href = session.thumbnailImage;
-                            targetLink.download = `target-${session.id}.jpg`;
-                            targetLink.click();
-                          }, 100);
+                        document.getElementById('downloadShareImages')?.addEventListener('click', async () => {
+                          try {
+                            // Show loading indicator
+                            const downloadBtn = document.getElementById('downloadShareImages');
+                            if (downloadBtn) {
+                              downloadBtn.textContent = 'Creating image...';
+                              downloadBtn.setAttribute('disabled', 'true');
+                            }
+                            
+                            // Create and download combined image
+                            const comparisonTitle = `PsiSketch - ${session.rating.charAt(0).toUpperCase() + session.rating.slice(1)}`;
+                            const combinedImage = await createComparisonImage(
+                              session.drawing, 
+                              session.thumbnailImage,
+                              comparisonTitle
+                            );
+                            
+                            // Download the combined image
+                            downloadImage(combinedImage, `psisketch-session-${session.id}.png`);
+                            
+                            // Restore button
+                            if (downloadBtn) {
+                              downloadBtn.textContent = 'Download Images';
+                              downloadBtn.removeAttribute('disabled');
+                            }
+                          } catch (error) {
+                            console.error('Failed to create comparison image:', error);
+                            alert('Sorry, there was a problem creating the combined image. Please try again.');
+                            
+                            // Fallback to downloading separate images
+                            const drawingLink = document.createElement('a');
+                            drawingLink.href = session.drawing;
+                            drawingLink.download = `drawing-${session.id}.png`;
+                            drawingLink.click();
+                            
+                            setTimeout(() => {
+                              const targetLink = document.createElement('a');
+                              targetLink.href = session.thumbnailImage;
+                              targetLink.download = `target-${session.id}.jpg`;
+                              targetLink.click();
+                            }, 100);
+                          }
                         });
                       }}
                     >

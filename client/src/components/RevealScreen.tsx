@@ -3,6 +3,7 @@ import { Textarea } from "@/components/ui/textarea";
 import GuidanceTip, { getRandomTip } from "@/components/GuidanceTips";
 import { useState, useEffect } from "react";
 import { Separator } from "@/components/ui/separator";
+import { createComparisonImage, downloadImage } from "@/lib/imageUtils";
 
 interface RevealScreenProps {
   targetImage: string;
