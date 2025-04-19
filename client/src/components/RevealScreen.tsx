@@ -41,38 +41,38 @@ export default function RevealScreen({
 
   return (
     <div className="screen flex flex-col h-full">
-      <div className="flex-grow relative overflow-hidden bg-black">
+      <div className="flex-grow relative overflow-auto bg-black">
         <GuidanceTip tip={guidanceTip} screen="reveal" />
         
-        {/* Side-by-side comparison */}
-        <div className="w-full h-full flex flex-col md:flex-row">
+        {/* Mobile-friendly comparison */}
+        <div className="w-full flex flex-col md:flex-row md:h-full">
           {/* Your Drawing */}
-          <div className="flex-1 flex flex-col">
-            <div className="bg-gray-900 p-2 text-center text-sm text-gray-400">
+          <div className="md:flex-1 flex flex-col min-h-[40vh] md:min-h-0">
+            <div className="bg-gray-900 p-2 text-center text-sm text-gray-400 sticky top-0 z-10">
               Your Drawing
             </div>
             <div className="flex-1 flex items-center justify-center p-2">
               <img
                 src={drawing}
                 alt="Your drawing"
-                className="max-w-full max-h-full object-contain"
+                className="max-w-full max-h-[35vh] md:max-h-full object-contain"
               />
             </div>
           </div>
           
-          {/* Separator */}
-          <div className="w-full h-[1px] md:w-[1px] md:h-full bg-gray-800"></div>
+          {/* Separator - horizontal on mobile, vertical on desktop */}
+          <div className="w-full h-[2px] md:w-[2px] md:h-full bg-gray-800 my-1 md:my-0 md:mx-1"></div>
           
           {/* Target Image */}
-          <div className="flex-1 flex flex-col">
-            <div className="bg-gray-900 p-2 text-center text-sm text-gray-400">
+          <div className="md:flex-1 flex flex-col min-h-[40vh] md:min-h-0">
+            <div className="bg-gray-900 p-2 text-center text-sm text-gray-400 sticky top-0 z-10">
               Target Image
             </div>
             <div className="flex-1 flex items-center justify-center p-2">
               <img
                 src={targetImage}
                 alt="Target image"
-                className="max-w-full max-h-full object-contain"
+                className="max-w-full max-h-[35vh] md:max-h-full object-contain"
               />
             </div>
           </div>
