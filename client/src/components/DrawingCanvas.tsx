@@ -1,6 +1,4 @@
-import { useState, useEffect, useImperativeHandle, forwardRef, useRef } from "react";
-// Import the fabric library according to fabric.js 6.x syntax
-import { Canvas, PencilBrush } from "fabric";
+import { useEffect, useImperativeHandle, forwardRef, useRef } from "react";
 
 interface DrawingCanvasProps {
   tool: string;
@@ -9,106 +7,159 @@ interface DrawingCanvasProps {
 }
 
 const DrawingCanvas = forwardRef(({ tool, color, onDrawingChange }: DrawingCanvasProps, ref) => {
-  const canvasElRef = useRef<HTMLCanvasElement>(null);
-  const [canvas, setCanvas] = useState<Canvas | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const contextRef = useRef<CanvasRenderingContext2D | null>(null);
   const isDrawing = useRef(false);
-
-  // Initialize canvas on component mount
+  const lastX = useRef(0);
+  const lastY = useRef(0);
+  
+  // Initialize canvas
   useEffect(() => {
-    if (!canvasElRef.current) return;
-
-    const fabricCanvas = new Canvas(canvasElRef.current, {
-      isDrawingMode: true,
-      width: window.innerWidth,
-      height: window.innerHeight - 100, // Adjust for header and tools
-      backgroundColor: "black",
-    });
-
-    // Set up brush
-    fabricCanvas.freeDrawingBrush = new PencilBrush(fabricCanvas);
-    fabricCanvas.freeDrawingBrush.color = color;
-    fabricCanvas.freeDrawingBrush.width = 5;
-
-    setCanvas(fabricCanvas);
-
-    // Handle window resize
-    const handleResize = () => {
-      fabricCanvas.setWidth(window.innerWidth);
-      fabricCanvas.setHeight(window.innerHeight - 100); // Adjust for header and tools
-      fabricCanvas.renderAll();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    // Set canvas size to fill the container
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight - 100; // Adjust for header and tools
+      
+      // Set up canvas context
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.lineWidth = 5;
+        ctx.strokeStyle = color;
+        contextRef.current = ctx;
+      }
     };
-
-    window.addEventListener("resize", handleResize);
-
+    
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+    
     return () => {
-      window.removeEventListener("resize", handleResize);
-      fabricCanvas.dispose();
+      window.removeEventListener("resize", resizeCanvas);
     };
   }, []);
-
-  // Update brush when tool or color changes
+  
+  // Update drawing color and tool
   useEffect(() => {
-    if (!canvas) return;
-
+    const ctx = contextRef.current;
+    if (!ctx) return;
+    
     if (tool === "pen-tool") {
-      canvas.freeDrawingBrush = new PencilBrush(canvas);
-      canvas.freeDrawingBrush.color = color;
-      canvas.freeDrawingBrush.width = 5;
+      ctx.globalCompositeOperation = "source-over";
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 5;
     } else if (tool === "eraser-tool") {
-      canvas.freeDrawingBrush = new PencilBrush(canvas);
-      canvas.freeDrawingBrush.color = "black"; // Eraser is just black drawing on black background
-      canvas.freeDrawingBrush.width = 20;
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.lineWidth = 20;
     }
-  }, [canvas, tool, color]);
-
-  // Expose canvas methods to parent component
+  }, [tool, color]);
+  
+  // Drawing handlers
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    isDrawing.current = true;
+    
+    // Get coordinates
+    let clientX, clientY;
+    if ('touches' in e) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    
+    // Adjust for canvas position if needed
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (rect) {
+      lastX.current = clientX - rect.left;
+      lastY.current = clientY - rect.top;
+    }
+  };
+  
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawing.current || !contextRef.current) return;
+    
+    // Prevent scrolling when drawing on touch devices
+    if ('touches' in e) {
+      e.preventDefault();
+    }
+    
+    // Get coordinates
+    let clientX, clientY;
+    if ('touches' in e) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    
+    // Adjust for canvas position
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (rect) {
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+      
+      const ctx = contextRef.current;
+      ctx.beginPath();
+      ctx.moveTo(lastX.current, lastY.current);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      
+      lastX.current = x;
+      lastY.current = y;
+    }
+  };
+  
+  const stopDrawing = () => {
+    isDrawing.current = false;
+    saveDrawingData();
+  };
+  
+  const saveDrawingData = () => {
+    if (canvasRef.current) {
+      const dataUrl = canvasRef.current.toDataURL("image/png");
+      onDrawingChange(dataUrl);
+    }
+  };
+  
+  // Expose methods to parent
   useImperativeHandle(ref, () => ({
     getImageData: () => {
-      if (!canvas) return "";
-      return canvas.toDataURL({
-        format: "png",
-        quality: 0.8,
-      });
+      if (!canvasRef.current) return "";
+      return canvasRef.current.toDataURL("image/png");
     },
     setTool: (toolId: string) => {
-      // The tool is handled in useEffect
+      // This is handled by the tool state and useEffect
     },
     clearCanvas: () => {
-      if (!canvas) return;
-      canvas.clear();
-      canvas.backgroundColor = "black";
-      canvas.renderAll();
+      const canvas = canvasRef.current;
+      const ctx = contextRef.current;
+      if (!canvas || !ctx) return;
+      
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      saveDrawingData();
     },
   }));
 
-  // Save drawing data whenever canvas changes
-  useEffect(() => {
-    if (!canvas) return;
-
-    const saveDrawing = () => {
-      const dataUrl = canvas.toDataURL({
-        format: "png",
-        quality: 0.8,
-      });
-      onDrawingChange(dataUrl);
-    };
-
-    canvas.on("mouse:up", saveDrawing);
-    canvas.on("mouse:out", saveDrawing);
-    canvas.on("touch:end", saveDrawing);
-
-    return () => {
-      canvas.off("mouse:up", saveDrawing);
-      canvas.off("mouse:out", saveDrawing);
-      canvas.off("touch:end", saveDrawing);
-    };
-  }, [canvas, onDrawingChange]);
-
   return (
     <canvas 
-      ref={canvasElRef} 
+      ref={canvasRef}
       id="drawing-canvas" 
       className="canvas-container absolute inset-0 w-full h-full" 
+      onMouseDown={startDrawing}
+      onMouseMove={draw}
+      onMouseUp={stopDrawing}
+      onMouseLeave={stopDrawing}
+      onTouchStart={startDrawing}
+      onTouchMove={draw}
+      onTouchEnd={stopDrawing}
     />
   );
 });
