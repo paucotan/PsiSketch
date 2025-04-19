@@ -9,16 +9,16 @@ interface WelcomeScreenProps {
 
 export default function WelcomeScreen({ onStartSession, onViewHistory }: WelcomeScreenProps) {
   return (
-    <div className="screen active bg-black text-white animate-fade-in overflow-y-auto py-8 px-4">
-      <div className="max-w-md mx-auto flex flex-col items-center">
+    <div className="screen active flex flex-col items-center justify-center p-6 bg-black text-white animate-fade-in">
+      <div className="max-w-md w-full flex flex-col items-center">
         <img
           src={psiSketchLogo}
           alt="PsiSketch Logo"
-          className="w-28 h-28 sm:w-32 sm:h-32 md:w-40 md:h-40 mb-4 md:mb-6"
+          className="w-40 h-40 mb-6"
         />
-        <h1 className="text-3xl md:text-4xl font-bold mb-4 md:mb-8 text-white text-center">PsiSketch</h1>
+        <h1 className="text-4xl font-bold mb-8 text-white text-center">PsiSketch</h1>
         
-        <div className="text-xl md:text-2xl text-center mb-8 space-y-4 md:space-y-6 font-light">
+        <div className="text-2xl text-center mb-10 space-y-6 font-light">
           <p className="opacity-90">Close your eyes.</p>
           <p className="opacity-90">Clear your mind.</p>
           <p className="opacity-90">Something is waiting to be seen.</p>
