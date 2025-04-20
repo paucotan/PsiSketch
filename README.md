@@ -29,7 +29,13 @@ The application keeps track of your practice sessions, allowing you to review pa
 
 ## 🖼️ Screenshots
 
-![PsiSketch screenshot](attached_assets/screenshots.png)
+<div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+  <img src="attached_assets/psisketch_screenshots/psisketch-session_ocean.png" width="200" />
+  <img src="attached_assets/psisketch_screenshots/psisketch-session_leaves.png" width="200" />
+  <img src="attached_assets/psisketch_screenshots/psisketch-session_drink.png" width="200" />
+  <img src="attached_assets/psisketch_screenshots/psisketch-session_desk.png" width="200" />
+</div>
+
 
 ## 🚀 Technologies Used
 
