@@ -30,6 +30,11 @@ In PsiSketch, you’ll practice by drawing what you sense—before seeing the re
 There are no wrong answers.
 Only the joy of discovering how much more you can perceive.
 
+🎬 Curious to learn more?
+Remote viewing isn’t just imagination—it was studied for decades by scientists and the military.
+Watch the documentary [Third Eye Spies (2019)](https://www.imdb.com/title/tt5112424/) to explore its fascinating history:
+▶️ [Watch the Trailer](https://youtu.be/iBokQomPr_g?si=1ViGrbPa6cNqUBf-)
+
 ## ✨ Features
 
 - **Guided Practice**: Step-by-step interface for remote viewing exercises
