@@ -15,6 +15,21 @@ PsiSketch is an interactive web application designed for practicing remote viewi
 
 The application keeps track of your practice sessions, allowing you to review past attempts and track your progress over time.
 
+## 🌠 What is Remote Viewing?
+
+Remote viewing is like tuning your mind to a hidden radio signal.
+It’s the practice of sensing or “seeing” things that are far away—without using your eyes.
+
+It’s not about guessing.
+It’s about listening quietly…
+To the subtle impressions that float up from somewhere deeper.
+
+People have used it to explore distant places, hidden objects, and even moments in time.
+In PsiSketch, you’ll practice by drawing what you sense—before seeing the real image.
+
+There are no wrong answers.
+Only the joy of discovering how much more you can perceive.
+
 ## ✨ Features
 
 - **Guided Practice**: Step-by-step interface for remote viewing exercises
