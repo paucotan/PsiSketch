@@ -85,3 +85,19 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Unsplash for providing the image API
 - Replit for the development environment
 - Remote Viewing community for inspiration and feedback
+
+## Deploying to Vercel
+
+This project is configured for easy deployment to Vercel.
+
+1.  **Sign up or Log in to Vercel:** Go to [https://vercel.com/](https://vercel.com/).
+2.  **Import Project:**
+    *   Click on "Add New..." and select "Project".
+    *   Import your Git repository.
+3.  **Configure Project (Vercel should autodetect settings):**
+    *   Vercel will automatically detect the `vercel.json` file and configure the build settings.
+    *   The **Root Directory** should be detected as the root of your project. Vercel will use the `vercel.json` to understand that the frontend is in the `client` directory.
+4.  **Deploy:** Click the "Deploy" button.
+5.  **Done!** Your application will be deployed, and you'll get a unique URL.
+
+Vercel will use the `vercel.json` file in the root of the project to determine the build command and output directory for the frontend application located in the `client` folder. It also includes routing rules necessary for single-page applications.
