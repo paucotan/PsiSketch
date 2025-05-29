@@ -1,0 +1,18 @@
+{
+  "name": "psisketch-frontend",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+    // Add other frontend-only deps like `axios`, `tailwindcss`, etc.
+  },
+  "devDependencies": {
+    "vite": "^5.4.19",
+    "@vitejs/plugin-react": "^4.3.2"
+  }
+}
