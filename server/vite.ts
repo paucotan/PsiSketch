@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { createServer as createViteServer, createLogger } from "vite";
 import { type Server } from "http";
-import viteConfig from "../client/vite.config";
+import react from "@vitejs/plugin-react";
 import { nanoid } from "nanoid";
 
 const viteLogger = createLogger();
@@ -23,12 +23,46 @@ export async function setupVite(app: Express, server: Server) {
   const serverOptions = {
     middlewareMode: true,
     hmr: { server },
-    allowedHosts: true,
   };
 
   const vite = await createViteServer({
-    ...viteConfig,
     configFile: false,
+    root: path.resolve(import.meta.dirname, "..", "client"),
+    plugins: [react()],
+    css: {
+      postcss: {
+        plugins: [
+          (await import("tailwindcss")).default({
+            config: path.resolve(import.meta.dirname, "..", "tailwind.config.ts"),
+          }),
+          (await import("autoprefixer")).default(),
+        ],
+      },
+    },
+    resolve: {
+      alias: {
+        "@": path.resolve(import.meta.dirname, "..", "client", "src"),
+        "@shared": path.resolve(import.meta.dirname, "..", "shared"),
+      },
+      // Allow Vite to resolve modules from the root node_modules
+      preserveSymlinks: false,
+    },
+    // Configure optimized deps to be found in root
+    optimizeDeps: {
+      entries: [
+        path.resolve(import.meta.dirname, "..", "client", "index.html"),
+        path.resolve(import.meta.dirname, "..", "client", "src", "**", "*.{ts,tsx}")
+      ],
+    },
+    // Configure module resolution to look in root node_modules
+    server: {
+      ...serverOptions,
+      fs: {
+        allow: [
+          path.resolve(import.meta.dirname, ".."),
+        ],
+      },
+    },
     customLogger: {
       ...viteLogger,
       error: (msg, options) => {

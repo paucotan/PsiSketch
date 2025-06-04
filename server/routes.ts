@@ -11,7 +11,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/random-image", async (req, res) => {
     try {
       // Get Unsplash API key from environment variables
-      const apiKey = import.meta.env.VITE_UNSPLASH_API_KEY || "demo_key";
+      const apiKey = process.env.UNSPLASH_API_KEY || "demo_key";
 
       // Define diverse categories for random targets
       const allCategories = [

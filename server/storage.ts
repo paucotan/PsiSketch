@@ -3,6 +3,7 @@ import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
 import connectPg from "connect-pg-simple";
 import session from "express-session";
+import memorystore from "memorystore";
 
 // Define the storage interface
 export interface IStorage {
@@ -155,7 +156,7 @@ export class MemStorage implements IStorage {
     this.currentSessionId = 1;
     
     // Create memory session store
-    const MemoryStore = require('memorystore')(session);
+    const MemoryStore = memorystore(session);
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000 // 24 hours
     });
@@ -272,4 +273,7 @@ export class MemStorage implements IStorage {
 }
 
 // Choose which implementation to use
-export const storage = new DatabaseStorage();
+// Use memory storage for local development
+export const storage = process.env.NODE_ENV === 'development' 
+  ? new MemStorage() 
+  : new DatabaseStorage();
