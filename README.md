@@ -76,6 +76,10 @@ See the [SETUP.md](SETUP.md) guide for detailed instructions on:
 - Setting up your development environment
 - Deploying to Vercel with a PostgreSQL database
 
+## 🔐 Security Notice
+
+If you previously pushed a `.env` file, immediately rotate the exposed credentials (e.g., Postgres `DATABASE_URL`, `UNSPLASH_API_KEY`) and delete the leaked secret versions from any dashboards. The repository now includes a `.env.example` template; copy it to `.env` locally and keep the real values outside version control.
+
 ## 📝 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
@@ -96,8 +100,17 @@ This project is configured for easy deployment to Vercel.
     *   Import your Git repository.
 3.  **Configure Project (Vercel should autodetect settings):**
     *   Vercel will automatically detect the `vercel.json` file and configure the build settings.
-    *   The **Root Directory** should be detected as the root of your project. Vercel will use the `vercel.json` to understand that the frontend is in the `client` directory.
-4.  **Deploy:** Click the "Deploy" button.
-5.  **Done!** Your application will be deployed, and you'll get a unique URL.
+    *   The **Root Directory** should be detected as the root of your project. Vercel will use the `vercel.json` to understand that the frontend is in the `client` directory and that the production bundle lives in `dist/public`.
+4.  **Set Environment Variables:** In the "Environment Variables" tab add the required secrets (for example `DATABASE_URL` for Postgres and `UNSPLASH_API_KEY` if you use the Unsplash integration). The API can fall back to an in-memory store when `DATABASE_URL` is absent (useful for Preview deployments), but production should provide the real connection string so data persists between requests.
+5.  **Deploy:** Click the "Deploy" button.
+6.  **Done!** Your application will be deployed, and you'll get a unique URL.
 
-Vercel will use the `vercel.json` file in the root of the project to determine the build command and output directory for the frontend application located in the `client` folder. It also includes routing rules necessary for single-page applications.
+Vercel will use the `vercel.json` file in the root of the project to determine the build command and output directory for the frontend application located in the `client` folder. It also includes routing rules necessary for single-page applications and assumes the built assets are emitted to `dist/public`.
+
+### Deployment readiness plan
+
+1. **Verify environment isolation:** Confirm that all secrets live only in Vercel project settings (or other secret managers) and that local `.env` files stay untracked.
+2. **Provision production database:** Run migrations against the managed Postgres instance (e.g., via `npm run db:push`) and confirm connectivity from the serverless function.
+3. **Validate build pipeline locally:** Execute `npm run build --prefix client` and `vercel build` to replicate the production build, ensuring `dist/public` is generated with the latest assets.
+4. **Smoke-test serverless handlers:** Use `vercel dev` to run the API locally, then redeploy and confirm logs show successful initialization.
+5. **Set up monitoring & rotations:** Enable Vercel deployment notifications and schedule regular secret rotations in case credentials are exposed again.

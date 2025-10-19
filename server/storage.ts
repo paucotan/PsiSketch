@@ -1,9 +1,10 @@
 import { users, type User, type InsertUser, sessions, type Session, type InsertSession } from "@shared/schema";
-import { db } from "./db";
+import { ensureDatabase, hasDatabaseConfig } from "./db";
 import { eq, desc } from "drizzle-orm";
 import connectPg from "connect-pg-simple";
 import session from "express-session";
 import memorystore from "memorystore";
+import { log } from "./logger";
 
 // Define the storage interface
 export interface IStorage {
@@ -37,62 +38,69 @@ const PostgresSessionStore = connectPg(session);
 // Database storage implementation
 export class DatabaseStorage implements IStorage {
   public sessionStore: session.Store;
-  
+  private readonly db;
+
   constructor() {
+    const { connectionString, db } = ensureDatabase();
+    if (!db) {
+      throw new Error("Database client was not created");
+    }
+    this.db = db;
+
     // Initialize session store for authentication
     this.sessionStore = new PostgresSessionStore({
       conObject: {
-        connectionString: process.env.DATABASE_URL,
+        connectionString,
       },
       createTableIfMissing: true
     });
   }
-  
+
   // User operations
   async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
+    const [user] = await this.db.select().from(users).where(eq(users.id, id));
     return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
+    const [user] = await this.db.select().from(users).where(eq(users.username, username));
     return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser).returning();
+    const [user] = await this.db.insert(users).values(insertUser).returning();
     return user;
   }
   
   // Session operations
   async getSession(id: number): Promise<Session | undefined> {
-    const [session] = await db.select().from(sessions).where(eq(sessions.id, id));
+    const [session] = await this.db.select().from(sessions).where(eq(sessions.id, id));
     return session;
   }
 
   async getSessions(): Promise<Session[]> {
-    return await db.select().from(sessions).orderBy(desc(sessions.createdAt));
+    return await this.db.select().from(sessions).orderBy(desc(sessions.createdAt));
   }
-  
+
   async getSessionsByCategory(category: string): Promise<Session[]> {
-    return await db.select().from(sessions)
+    return await this.db.select().from(sessions)
       .where(eq(sessions.category, category))
       .orderBy(desc(sessions.createdAt));
   }
   
   async getUserSessions(userId: number): Promise<Session[]> {
     // Need to add user_id column to sessions table for this to work
-    return await db.select().from(sessions)
+    return await this.db.select().from(sessions)
       .orderBy(desc(sessions.createdAt));
   }
 
   async createSession(insertSession: InsertSession): Promise<Session> {
-    const [session] = await db.insert(sessions).values(insertSession).returning();
+    const [session] = await this.db.insert(sessions).values(insertSession).returning();
     return session;
   }
 
   async deleteSession(id: number): Promise<boolean> {
-    const result = await db.delete(sessions).where(eq(sessions.id, id)).returning();
+    const result = await this.db.delete(sessions).where(eq(sessions.id, id)).returning();
     return result.length > 0;
   }
   
@@ -272,8 +280,37 @@ export class MemStorage implements IStorage {
   }
 }
 
-// Choose which implementation to use
-// Use memory storage for local development
-export const storage = process.env.NODE_ENV === 'development' 
-  ? new MemStorage() 
-  : new DatabaseStorage();
+let storageInstance: IStorage | null = null;
+
+function createStorage(): IStorage {
+  const isDevelopment = process.env.NODE_ENV === "development";
+
+  if (!hasDatabaseConfig()) {
+    if (!isDevelopment) {
+      log(
+        "DATABASE_URL is not configured. Falling back to in-memory storage; data will reset between deployments.",
+        "storage",
+      );
+    }
+
+    return new MemStorage();
+  }
+
+  try {
+    return new DatabaseStorage();
+  } catch (error) {
+    log(
+      `Failed to initialize database storage (${(error as Error).message}). Falling back to in-memory storage.`,
+      "storage",
+    );
+    return new MemStorage();
+  }
+}
+
+export function getStorage(): IStorage {
+  if (!storageInstance) {
+    storageInstance = createStorage();
+  }
+
+  return storageInstance;
+}
