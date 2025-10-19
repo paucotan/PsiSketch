@@ -1,10 +1,15 @@
 import type { Express } from "express";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 import { createServer as createViteServer, createLogger } from "vite";
 import type { Server } from "http";
 import react from "@vitejs/plugin-react";
 import { nanoid } from "nanoid";
+
+const moduleDir = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(moduleDir, "..");
+const clientRoot = path.resolve(repoRoot, "client");
 
 export async function setupVite(app: Express, server: Server) {
   const viteLogger = createLogger();
@@ -15,13 +20,13 @@ export async function setupVite(app: Express, server: Server) {
 
   const vite = await createViteServer({
     configFile: false,
-    root: path.resolve(import.meta.dirname, "..", "client"),
+    root: clientRoot,
     plugins: [react()],
     css: {
       postcss: {
         plugins: [
           (await import("tailwindcss")).default({
-            config: path.resolve(import.meta.dirname, "..", "tailwind.config.ts"),
+            config: path.resolve(repoRoot, "tailwind.config.ts"),
           }),
           (await import("autoprefixer")).default(),
         ],
@@ -29,21 +34,21 @@ export async function setupVite(app: Express, server: Server) {
     },
     resolve: {
       alias: {
-        "@": path.resolve(import.meta.dirname, "..", "client", "src"),
-        "@shared": path.resolve(import.meta.dirname, "..", "shared"),
+        "@": path.resolve(clientRoot, "src"),
+        "@shared": path.resolve(repoRoot, "shared"),
       },
       preserveSymlinks: false,
     },
     optimizeDeps: {
       entries: [
-        path.resolve(import.meta.dirname, "..", "client", "index.html"),
-        path.resolve(import.meta.dirname, "..", "client", "src", "**", "*.{ts,tsx}"),
+        path.resolve(clientRoot, "index.html"),
+        path.resolve(clientRoot, "src", "**", "*.{ts,tsx}"),
       ],
     },
     server: {
       ...serverOptions,
       fs: {
-        allow: [path.resolve(import.meta.dirname, "..")],
+        allow: [repoRoot],
       },
     },
     customLogger: {
@@ -61,12 +66,7 @@ export async function setupVite(app: Express, server: Server) {
     const url = req.originalUrl;
 
     try {
-      const clientTemplate = path.resolve(
-        import.meta.dirname,
-        "..",
-        "client",
-        "index.html",
-      );
+      const clientTemplate = path.resolve(clientRoot, "index.html");
 
       let template = await fs.promises.readFile(clientTemplate, "utf-8");
       template = template.replace(
